@@ -166,15 +166,16 @@ export default class gameHackTerminal {
 		curElem.classList.remove('highlight');	// Перекрашиваем его в нормальный цвет по факту ухода
 		if (this.leftCheat >=0 || this.rightCheat >= 0) {
 			for (let i = this.leftCheat; i <= this.rightCheat; i++) { // Мы красили ранее чит и ушли с него! Покрасим его обратно.
-				let tElem = this.rootElement.querySelector(`#${i}`)
-				tElem.classList.remove('highlight');
+				// console.log(curElem.parentNode);
+				curElem.parentNode.querySelector(`idx-${i}`).classList.remove('highlight');
 			}
 			this.leftCheat = -1;	// Левая граница чита глобально - ушли с чита, значит вовзращаем индесы на место
 			this.rightCheat = -1;	// Правая граница чита глобально - ушли с чита, значит вовзращаем индесы на место
 		}
 		if (curElem.className == "word") {
+			let serviceField = document.querySelector(".service");
 			this.serviceText[15] = "<br>";
-			this.serviceField.innerHTML = this.serviceText.join("");
+			serviceField.innerHTML = this.serviceText.join("");
 		}	
 	}
 
@@ -192,13 +193,15 @@ export default class gameHackTerminal {
 				[this.leftCheat, this.rightCheat] = this.checkCheat(curElem);
 				if (this.leftCheat >= 0 && this.rightCheat >= 0) {
 					for (let i = this.leftCheat; i <= this.rightCheat; i++) {
-						this.rootElement.getElementById(i).classList.add('highlight');
+						// console.log(i);
+						// console.log(curElem.parentNode);
+						curElem.parentNode.querySelector(`idx-${i}`).classList.add('highlight');
 					}
 				}
 			} else { // Выбрали слово
 				// document.getElementById('sel_word').play(); 
-				serviceField = document.querySelector(".service");
-				this.serviceText[15] = curElem.id;
+				let serviceField = document.querySelector(".service");
+				this.serviceText[15] = curElem.dataset.element;;
 				serviceField.innerHTML = this.serviceText.join("");
 			}
 			curElem.classList.add('highlight');
@@ -209,19 +212,22 @@ export default class gameHackTerminal {
 		let left = -1, right = -1; // Левая и правая границы чита
 		let i = 0, j = 0;
 		// ID - позиция в массиве grb_str_clear
-		const curId = element.id;
+		const curId = element.dataset.element.slice(4);
 		// Левая граница строки на игровом поле в основном массиве символов
 		const leftBorder = Math.floor(curId / this.numChars) * this.numChars; 
 		// Правая граница диапазона в основном массиве симоволов
 		const rightBorder = leftBorder + this.numChars;
+		// console.log([leftBorder, rightBorder]);
 		let leftIdx = this.leftBrackets.indexOf(this.grbStrClear[curId]); 	// Проверяем, является ли символ левой скобкой
 		let rightIdx = this.rightBrackets.indexOf(this.grbStrClear[curId]);	// Проверяем, является ли символ правой скобкой
 		if (leftIdx >= 0) { // Символ  - левая скобка
+			let leftBrk = this.leftBrackets[leftIdx];
 			let rightBrk = this.rightBrackets[leftIdx]; // Выбираем к ней правую пару
-			[left, right] = this.selectCheat(leftIdx, rightBorder, rightBrk); 
+			[left, right] = this.selectCheat(curId, rightBorder, rightBrk); 
 		} else if (rightIdx >= 0) { // Это правая скобка
+				let rightBrk = this.rightBrackets[rightIdx];
 				let leftBrk = this.leftBrackets[rightIdx]; // Выбираем к ней левую пару
-				[left, right] = this.selectCheat(rightIdx, leftBorder, leftBrk); 
+				[left, right] = this.selectCheat(curId, leftBorder, leftBrk); 
 		}
 		return [left, right];
 	}
@@ -231,14 +237,16 @@ export default class gameHackTerminal {
 			for(let i = startPos; i < endPos; i++) {
 				switch (this.checkCharCheat(i, bracket)) {
 					case -1: return [-1, -1];		// Cлово
-					case 1: return [startPos, i]; 	// Чит
+					case 1: console.log([startPos, i]);
+						return [startPos, i]; 	// Чит
 				}
 			}
 		} else {
 			for(let i = startPos; i > endPos; i--) {
 				switch (this.checkCharCheat(i, bracket)) {
 					case -1: return [-1, -1];		// Cлово
-					case 1: return [i, startPos]; 	// Чит
+					case 1: console.log([i, startPos]);
+						return [i, startPos]; 	// Чит
 				}
 			}
 		}
@@ -302,7 +310,7 @@ export default class gameHackTerminal {
 		grbChars.forEach(character => {
 			charFlag = isAlpha(character);
 			if(charFlag && wordFlag === 0) { // Начали слово
-				grbTagged.push(`<span class=\"word\" id=\"${wordList[j]}\">${character}`);
+				grbTagged.push(`<span class=\"word\" data-element=\"${wordList[j]}\">${character}`);
 				wordFlag = 1;
 				j++;
 			} else if (charFlag && wordFlag > 0) {
@@ -311,9 +319,9 @@ export default class gameHackTerminal {
 				wordFlag = 0;
 				tLast = grbTagged.pop() + "</span>";
 				grbTagged.push(tLast);
-				grbTagged.push(`<span class=\"char\" id=\"${i}\">${character}</span>`);
+				grbTagged.push(`<span class=\"char\" data-element=\"idx-${i}\">${character}</span>`);
 			} else {
-				grbTagged.push(`<span class=\"char\" id=\"${i}\">${character}</span>`);
+				grbTagged.push(`<span class=\"char\" data-element=\"idx-${i}\">${character}</span>`);
 			}
 			i++;
 		});
