@@ -1,0 +1,156 @@
+@font-face {
+    font-family: 'VT220';
+    src: url('./fonts/Glass_TTY_VT220.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: '7LED';
+    src: url('./fonts/7led.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+body,html {
+    margin: 0;
+    padding: 0;
+    background: rgb(0, 0, 0);
+    font-family: "VT220";
+    font-size: 1rem;
+    color: rgb(235,255,223);
+}
+
+svg {
+    display: block;
+    width: 50vw;
+    height: 90vh;
+    fill: rgb(235, 255, 223);
+    position: absolute;
+    right: 25vw;
+    top: 1vh;
+}
+
+.animate-centered {
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.rotate {
+  animation: rotate 15s linear infinite;
+}
+
+.pulse {
+  animation: pulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  from { opacity: .1; }
+  to { opacity: .25; }
+}
+
+.screen {
+  position: absolute;
+  height: 100vh;
+  width: 100vw;
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 2rem;
+  font-family: "VT220";
+}
+
+.screen-wrapper {
+  border: .3rem solid rgb(0, 0, 0);
+}
+
+.screen-border {
+  box-shadow: 0 0 2.5rem 1rem white inset;
+  opacity: .2;
+}
+
+.screen__background {
+  background-image:
+    radial-gradient(
+      ellipse farthest-corner,
+      rgb(134, 151, 129),
+      #000000 90%
+    );
+}
+
+.screen__background_stripes {
+  background: linear-gradient(
+    to bottom,
+    #5d9634,
+    #a2c28b 50%,
+    #538c2b 50%,
+    #a2c28b
+  );
+  background-size: 100% 8px;
+  opacity: .1;
+  z-index: 100;
+}
+
+.screen__content {
+  z-index: 1000;
+}
+
+.screen__effects-stripe {
+  width: 100%;
+  height: 1px;
+  box-shadow: 2px -5px 14px 1px white;
+  background: white;
+  opacity: .35;
+  -webkit-animation: upToBottom 8s infinite linear;
+  animation: upToBottom 8s infinite linear;
+  z-index: 999;
+}
+
+@-webkit-keyframes upToBottom {
+    0% { transform: translateY(-5vh); }
+    100% { transform: translateY(105vh); }
+}
+
+@keyframes upToBottom {
+    0% { transform: translateY(-5vh); }
+    100% { transform: translateY(105vh); }
+}
+
+.loading {
+  width: auto;
+  max-width: 25%;
+  padding: 3rem;
+  font-size: 1.2rem;
+}
+
+.circle {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: white;
+  margin: auto;
+  animation: scaleAndMove 1.5s ease-in infinite;
+  transition: 1s;
+}
+
+@keyframes scaleAndMove {
+  0% {
+    margin-top: 10rem;
+    transform: scale(1);
+  }
+  70% {
+    margin-top: 10rem;
+    transform: scale(.5);
+  }
+  100% {
+    margin-top: 2rem;
+    transform: scale(.5);
+  }
+}
