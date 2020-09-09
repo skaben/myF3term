@@ -44,8 +44,6 @@ function shuffleArray(array) {
 	return array;
 }
 
-// Поле 2х16х16, черт с ней с аутентичностью.
-
 export default class gameHackTerminal {
 	numRows = 16;
 	numChars = 16;
@@ -68,7 +66,7 @@ export default class gameHackTerminal {
 	} = {}) {
 		this.timeОut = gameData.timeOut;
 		this.password = gameData.password;
-		this.chanceTries = gameData.chanceTries;
+		this.chanceTries = gameData.chanceTries; 
 		this.numTries = gameData.numTries; 	// Эталонное висло попыток
 		this.tries = gameData.numTries;		// Рабочее (текущее) число попыток
 		this.falseWords = gameData.falseWords;
@@ -205,7 +203,7 @@ export default class gameHackTerminal {
 				this.addServiсe(this.serviceField, "Tries restored!<br>");
 			} else { // Убираем слово-заглушку
 				const dWord = this.selectDummyWord();
-				if (dWord === 'undefined') { 		// Слова кончились, восстанавливаем попытки!
+				if (dWord === undefined) { 		// Слова кончились, восстанавливаем попытки!
 					this.tries = this.numTries;
 					this.numTriesShow(this.tries);	// Отображаем результат
 				}
@@ -217,7 +215,7 @@ export default class gameHackTerminal {
 		const idxDumb = getRandomInt(0, this.falseWords.length-1);	// Выбираем случайное слово - не пароль.
 		let wordSel = this.rootElement.querySelector(`[data-element="${this.falseWords[idxDumb]}"]`);
 		let i = 0, flag = 0;
-		if (wordSel == undefined) { // Кончились "заглушки"
+		if (wordSel === undefined) { // Кончились "заглушки"
 			return undefined;
 		} else {
 			this.falseWords.splice(idxDumb, 1);	// Удаляем выбранное слово из массива.
@@ -491,41 +489,3 @@ export default class gameHackTerminal {
 	}
 };
 
-
-
-/* 
-
-const timer = document.querySelector(".timer");
-
-function startTimer(timeOut) {
-	if (timeOut <= 0) {
-		timer.style.display = "none";
-		return;
-	}
-	timerFunc = setInterval(function useTimer() {
-		let seconds = timeOut%60; // Получаем секунды
-		let minutes = timeOut/60%60; // Получаем минуты
-		let hour = timeOut/60/60%60; // Получаем часы
-		// Условие если время закончилось то...
-		if (timeOut <= 0) {
-				// Таймер удаляется
-				clearInterval(timerFunc);
-				gameLose(); // Проиграли!
-		} else { // Иначе
-				// Создаём строку с выводом времени
-				let str_sec = pad(parseInt(seconds, 10).toString(), 2);
-				let str_min = pad(parseInt(Math.trunc(minutes), 10).toString(), 2);
-				let str_hour = pad(parseInt(Math.trunc(hour), 10).toString(), 2);
-				let str_out = `${str_hour}:${str_min}:${str_sec}`;
-				// Выводим строку в блок для показа таймера
-				timer.innerHTML = str_out;
-		}
-		--timeOut; // Уменьшаем таймер
-	}, 1000)
-}	
-
-startTimer(600);
-
-
-
-*/
