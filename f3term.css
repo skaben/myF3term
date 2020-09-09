@@ -6,7 +6,7 @@
 	font-family: '7LED';
 	font-size: 24pt;
   margin-top: -4rem;
-	margin-right: 2rem;
+	margin-right: 6rem;
 }
 	
 .content {
@@ -51,11 +51,11 @@
 
 .service {
   box-sizing: border-box;
-  width: 10vw;
+  width: 20vw;
   height: 80%;
   float: left;
   vertical-align: bottom;
-  margin-left: 10rem;
+  margin-left: 0;
   opacity: 90%;
 }
 

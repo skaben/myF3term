@@ -15,9 +15,9 @@ function isAlphaNum(c) {
 }
 
 function getRandomInt(min, max) {
-	min = Math.ceil(min);
-	max = Math.floor(max);
-	return Math.floor(Math.random() * (max - min + 1)) + min; //Максимум и минимум включаются
+	const lMin = Math.ceil(min);
+	const lMax = Math.floor(max);
+	return Math.floor(Math.random() * (lMax - lMin + 1)) + lMin; //Максимум и минимум включаются
 }
 
 function pad(num, size) {
@@ -26,18 +26,10 @@ function pad(num, size) {
     return s;
 }
 
-function numTries(num_tries) {
-	let tmp_txt = "";
-	for (let i = 0; i < num_tries; i++) {
-		tmp_txt += "* ";
-	}	
-	document.getElementById("tries").innerHTML = tmp_txt;
-}	
-
-function compareWords(word, pass_word) {
+function compareWords(word, passWord) {
 	let count = 0;
-	for (let i = 0; i < pass_word.length; i++) {
-		if (pass_word[i] == word[i]) {
+	for (let i = 0; i < passWord.length; i++) {
+		if (passWord[i] == word[i]) {
 			count++;
 		}
 	}
@@ -50,41 +42,6 @@ function shuffleArray(array) {
 	  [array[i], array[j]] = [array[j], array[i]];
 	}
 	return array;
-}
-
-function insertServiсe(word) {
-	serviceText.splice(0, 3);	
-	serviceText[14] = word;
-	serviceText[15] = "<br>";
-	serviceField.innerHTML = serviceText.join("");
-}
-
-function gameLose () { // Проигрыш
-	m_field.onclick = function clickDummy(event) {};
-	m_field.onmouseover = function overDummy(event) {};
-	m_field.onmouseout = function outDummy(event) {};
-	
-	str_lose = "You LOSE! ";
-	if (num_tries <=0) {
-		str_lose += "Tries is over! ";
-	}
-	if (game_data.timeout >0) {
-		clearInterval(timerFunc);	
-		if (time_out <= 0) {
-			str_lose += "Time is out! ";
-		}
-	}
-	document.getElementById("tries").innerHTML = str_lose;
-}
-
-function gameWin () { // Выигрыш
-	m_field.onclick = function clickDummy(event) {};
-	m_field.onmouseover = function overDummy(event) {};
-	m_field.onmouseout = function outDummy(event) {};
-	if (game_data.timeout >0) {
-		clearInterval(timerFunc);	
-	}
-	document.getElementById("tries").innerHTML = "You WIN! Access GRANTED!";
 }
 
 // Поле 2х16х16, черт с ней с аутентичностью.
@@ -110,11 +67,15 @@ export default class gameHackTerminal {
 		}
 	} = {}) {
 		this.timeОut = gameData.timeOut;
-		this.tries = gameData.numTries;
+		this.password = gameData.password;
+		this.chanceTries = gameData.chanceTries;
+		this.numTries = gameData.numTries; 	// Эталонное висло попыток
+		this.tries = gameData.numTries;		// Рабочее (текущее) число попыток
+		this.falseWords = gameData.falseWords;
+		this.lenWord = gameData.password.length; // Длина слова
 		this.numWords = gameData.falseWords.length + 1; // Длина списка слов + пароль
 		this.passPos = getRandomInt(0, this.numWords - 1); // Позиция пароля в списке слов
-		this.lenWord = gameData.password.length; // Длина слова
-		this.serviceText = ["<br>", "<br>", "<br>", "<br>", "<br>", "<br>", "<br>", "<br>", 
+		this.serviceTxt = ["<br>", "<br>", "<br>", "<br>", "<br>", "<br>", "<br>", "<br>", 
 								"<br>", "<br>", "<br>", "<br>", "<br>", "<br>", "<br>", "<br>" ];
 		this.numGarbage = 2 * (this.numRows * this.numChars); // Общий размер игрового поля
 		this.leftCheat = -1; 	// Позиция найденного чита начало
@@ -130,8 +91,6 @@ export default class gameHackTerminal {
 		this.rightTxt = ''; // Правое поле текста
 
 		this.rootElement = document.querySelector(".screen__content"); // Основной элемент интерфейса
-		this.serviceField = document.querySelector(".service"); // Поле сервисного "журнала"
-		
 		
 		// Заполняем массивы
 		this.wordList = this.initWordList(this.passPos, gameData.password, this.numWords, gameData.falseWords);
@@ -142,40 +101,49 @@ export default class gameHackTerminal {
 		[this.leftTxt, this.rightTxt] = this.initTxt(this.numRows, this.numChars, this.grbStrTagged);
 
 		this.render();
+		this.serviceField = document.querySelector(".service"); // Поле сервисного "журнала"
 		this.initEventListeners();
-		
-
-		//console.log(this.wordList);
-		//console.log(this.posWords);
-		//console.log(this.grbStrClear);
-		//console.log(this.grbStrTagged);
-		//console.log(this.leftIdx);
-		//console.log(this.rightIdx);
-		//console.log(this.leftTxt);
-		//console.log(this.rightTxt);
+		this.startTimer(this.timeОut);
 	}
 
 	initEventListeners() {
 		this.rootElement.addEventListener("pointerover", this.onHover);
 		this.rootElement.addEventListener("pointerout", this.onOut);
-		// this.rootElement.addEventListener("pointerdown", this.onClick);
+		this.rootElement.addEventListener("pointerdown", this.onClick);
+	}
+	  
+	destroyEventListeners() {
+		this.rootElement.removeEventListener("pointerover", this.onHover);
+		this.rootElement.removeEventListener("pointerout", this.onOut);
+		this.rootElement.removeEventListener("pointerdown", this.onClick);
   	}
+
+	dummy() {
+		return false;
+	}
+
+	onClick = (event) => {
+		let curElem = event.target;	// Текущий элемент, на котором кликнули current element
+		// console.log(curElem.className);
+		if (curElem.className.indexOf('word') >=0 ) { 	// Кликнули на слово
+			this.clickOnWord(curElem);
+		} else if (curElem.className.indexOf('char') >=0 ){ // Кликнули на символ
+			this.clickOnChar(curElem);
+		}	
+	}	
 
 	onOut = (event) => {
 		let curElem = event.target; 			// Текущий, current element, с которого ушла мышь
 		curElem.classList.remove('highlight');	// Перекрашиваем его в нормальный цвет по факту ухода
 		if (this.leftCheat >=0 || this.rightCheat >= 0) {
 			for (let i = this.leftCheat; i <= this.rightCheat; i++) { // Мы красили ранее чит и ушли с него! Покрасим его обратно.
-				// console.log(curElem.parentNode);
-				curElem.parentNode.querySelector(`idx-${i}`).classList.remove('highlight');
+				curElem.parentNode.querySelector(`[data-element="idx-${i}"]`).classList.remove('highlight');
 			}
 			this.leftCheat = -1;	// Левая граница чита глобально - ушли с чита, значит вовзращаем индесы на место
 			this.rightCheat = -1;	// Правая граница чита глобально - ушли с чита, значит вовзращаем индесы на место
 		}
 		if (curElem.className == "word") {
-			let serviceField = document.querySelector(".service");
-			this.serviceText[15] = "<br>";
-			serviceField.innerHTML = this.serviceText.join("");
+			this.delTmpServiсe(this.serviceField);
 		}	
 	}
 
@@ -185,47 +153,110 @@ export default class gameHackTerminal {
 		if (curElem.className === 'char' || curElem.className === 'word') {
 			if (prevElem != null) { // Предыдущий элемент, с которого ушли, не пустой.
 				if (prevElem.className === 'char' || prevElem.className === 'word') { 
-					// Если ушли со слова или знака - перекрасим в нормальный стиль.
-					prevElem.classList.remove('highlight');
+					prevElem.classList.remove('highlight'); // Если ушли со слова или знака - перекрасим в нормальный стиль.
 				}
 			}	
 			if (curElem.className === 'char') {
 				[this.leftCheat, this.rightCheat] = this.checkCheat(curElem);
 				if (this.leftCheat >= 0 && this.rightCheat >= 0) {
 					for (let i = this.leftCheat; i <= this.rightCheat; i++) {
-						// console.log(i);
-						// console.log(curElem.parentNode);
-						curElem.parentNode.querySelector(`idx-${i}`).classList.add('highlight');
+						curElem.parentNode.querySelector(`[data-element="idx-${i}"]`).classList.add('highlight');
 					}
 				}
 			} else { // Выбрали слово
 				// document.getElementById('sel_word').play(); 
-				let serviceField = document.querySelector(".service");
-				this.serviceText[15] = curElem.dataset.element;;
-				serviceField.innerHTML = this.serviceText.join("");
+				this.addTmpServiсe(this.serviceField, curElem.dataset.element);
 			}
 			curElem.classList.add('highlight');
+		}
+	}
+
+	clickOnWord(element) {
+		const curId = element.dataset.element;
+		const numLetters = compareWords(curId, this.password); // Сравниваем выбранное слово с паролем по буквам
+		if (numLetters == this.lenWord)  { // Слово свопало с паролем
+			this.gameWin();	// Выиграли
+			return;
+		} else { // Слово не совпало с паролем
+			this.tries--;	// Уменьшаем число попыток
+			this.numTriesShow(this.tries);	// Отображаем уменьшенный результат
+			if (this.tries == 0) { // Все попытки исчерпаны
+				this.gameLose();	// Проиграли
+				return;
+			}
+			this.delTmpServiсe(this.serviceField);
+			this.addServiсe(this.serviceField, `${curId} <br> ${numLetters} of ${this.lenWord}<br>`); // Выводим результат сравнения
+		}
+	}
+
+	clickOnChar(element) {
+		let i = 0;
+		let flag = 0;
+		const chance = Math.random();
+		if (this.leftCheat >= 0 && this.rightCheat >= 0) { // Кликнули на скобке и ранее обнаружен удачный чит
+			for (i = this.leftCheat; i <= this.rightCheat; i++) {
+				element.parentNode.querySelector(`[data-element="idx-${i}"]`).innerHTML = '.';
+				element.parentNode.querySelector(`[data-element="idx-${i}"]`).classList.remove('highlight');
+				this.grbStrClear[i] = '.';
+			}	
+			if (chance <= this.chanceTries) { 	// Повезло. восстанавливаем попытки!
+				this.tries = this.numTries;
+				this.numTriesShow(this.tries);	// Отображаем результат
+				this.addServiсe(this.serviceField, "Tries restored!<br>");
+			} else { // Убираем слово-заглушку
+				const dWord = this.selectDummyWord();
+				if (dWord === 'undefined') { 		// Слова кончились, восстанавливаем попытки!
+					this.tries = this.numTries;
+					this.numTriesShow(this.tries);	// Отображаем результат
+				}
+			}	
+		}	
+	}
+
+	selectDummyWord() {
+		const idxDumb = getRandomInt(0, this.falseWords.length-1);	// Выбираем случайное слово - не пароль.
+		let wordSel = this.rootElement.querySelector(`[data-element="${this.falseWords[idxDumb]}"]`);
+		let i = 0, flag = 0;
+		if (wordSel == undefined) { // Кончились "заглушки"
+			return undefined;
+		} else {
+			this.falseWords.splice(idxDumb, 1);	// Удаляем выбранное слово из массива.
+			let newWord = '';
+			this.addServiсe(this.serviceField, "DUMMY REMOVED!<br>");
+			for (i = 0; i < wordSel.innerHTML.length; i++) {	// Перебираем выбранное слово посимвольно.
+				if (flag == 0 && wordSel.innerHTML[i] == '<') { // Нашли тэг <br>, выставляем флаг, что надо копировать тэг.
+					flag = 1;
+					newWord += wordSel.innerHTML[i];
+					continue;
+				}
+				if (flag == 1 && wordSel.innerHTML[i] == '>') { // Тэг закончился, скопировн, флаг обнулили.
+					newWord += wordSel.innerHTML[i];
+					flag = 0;
+					continue;
+				}	
+				if (flag == 1) { // Копируем тэг без изменений в новое "слово".
+					newWord += wordSel.innerHTML[i];
+					continue;
+				}	
+				newWord += '<span data-element=\"dot\" class=\"char\">.</span>'; // Все символы в слове, кроме тэга, заменяем точками.
+			}
+			wordSel.innerHTML = newWord; 	// Заменили в документе слово точками.
+			wordSel.dataset.element = ''; 	// Обнулили ID
 		}
 	}
 
 	checkCheat(element) {
 		let left = -1, right = -1; // Левая и правая границы чита
 		let i = 0, j = 0;
-		// ID - позиция в массиве grb_str_clear
-		const curId = element.dataset.element.slice(4);
-		// Левая граница строки на игровом поле в основном массиве символов
-		const leftBorder = Math.floor(curId / this.numChars) * this.numChars; 
-		// Правая граница диапазона в основном массиве симоволов
-		const rightBorder = leftBorder + this.numChars;
-		// console.log([leftBorder, rightBorder]);
+		const curId = element.dataset.element.slice(4); // Позиция в массиве grb_str_clear
+		const leftBorder = Math.floor(curId / this.numChars) * this.numChars; // Левая граница строки 
+		const rightBorder = leftBorder + this.numChars;	// Правая граница строки
 		let leftIdx = this.leftBrackets.indexOf(this.grbStrClear[curId]); 	// Проверяем, является ли символ левой скобкой
 		let rightIdx = this.rightBrackets.indexOf(this.grbStrClear[curId]);	// Проверяем, является ли символ правой скобкой
 		if (leftIdx >= 0) { // Символ  - левая скобка
-			let leftBrk = this.leftBrackets[leftIdx];
 			let rightBrk = this.rightBrackets[leftIdx]; // Выбираем к ней правую пару
 			[left, right] = this.selectCheat(curId, rightBorder, rightBrk); 
 		} else if (rightIdx >= 0) { // Это правая скобка
-				let rightBrk = this.rightBrackets[rightIdx];
 				let leftBrk = this.leftBrackets[rightIdx]; // Выбираем к ней левую пару
 				[left, right] = this.selectCheat(curId, leftBorder, leftBrk); 
 		}
@@ -237,16 +268,14 @@ export default class gameHackTerminal {
 			for(let i = startPos; i < endPos; i++) {
 				switch (this.checkCharCheat(i, bracket)) {
 					case -1: return [-1, -1];		// Cлово
-					case 1: console.log([startPos, i]);
-						return [startPos, i]; 	// Чит
+					case 1:  return [startPos, i]; 	// Чит
 				}
 			}
 		} else {
 			for(let i = startPos; i > endPos; i--) {
 				switch (this.checkCharCheat(i, bracket)) {
 					case -1: return [-1, -1];		// Cлово
-					case 1: console.log([i, startPos]);
-						return [i, startPos]; 	// Чит
+					case 1: return [i, startPos]; 	// Чит
 				}
 			}
 		}
@@ -317,8 +346,7 @@ export default class gameHackTerminal {
 				grbTagged.push(`${character}`);
 			} else if (wordFlag > 0) {
 				wordFlag = 0;
-				tLast = grbTagged.pop() + "</span>";
-				grbTagged.push(tLast);
+				grbTagged.push(grbTagged.pop() + "</span>");
 				grbTagged.push(`<span class=\"char\" data-element=\"idx-${i}\">${character}</span>`);
 			} else {
 				grbTagged.push(`<span class=\"char\" data-element=\"idx-${i}\">${character}</span>`);
@@ -354,24 +382,14 @@ export default class gameHackTerminal {
 		return [left, right];
 	}
 
-	addTmpServiсe(word) {
-		this.serviceText[15] = word;
-		this.serviceField.innerHTML = this.serviceText.join("");
-	}
-	
-	delTmpServiсe() {
-		this.serviceText[15] = "<br>";
-		this.serviceField.innerHTML = this.serviceText.join("");
-	}
-	
-
 	template() {
 		return `
 		<div class="interface">
 			<div class="interface_header">
 			<p data-element="status">-----</p>
-			<p> TRIES LEFT: <span data-element="tries">${"*".repeat(this.tries)}</span></p>
+			<p> TRIES LEFT: <span data-element="tries">${"* ".repeat(this.tries)}</span></p>
 			</div>
+			<div class="timer"></div>
 			<div class="interface_content">
 			<div class="idx left_idx">${this.leftIdx}</div>
 			<div class="content_left">${this.leftTxt}</div>
@@ -386,9 +404,91 @@ export default class gameHackTerminal {
 		`
 	}
 
+	gameLose () { // Проигрыш
+		this.destroyEventListeners();
+		let  strLose = "You LOSE! ";
+		if (this.tries <=0) {
+			strLose += "Tries is over! ";
+		}
+		if (this.timeOut >0) {
+			clearInterval(timerFunc);	
+			if (this.timeOut <= 0) {
+				strLose += "Time is out! ";
+			}
+		}
+		this.rootElement.querySelector("[data-element=\"tries\"]").innerHTML = strLose;
+	}
+	
+	gameWin () { // Выигрыш
+		this.destroyEventListeners();
+		if (this.timeOut >0) {
+			clearInterval(timerFunc);	
+		}
+		this.rootElement.querySelector("[data-element=\"tries\"]").innerHTML = "You WIN! Access GRANTED!";
+	}
+
+	addTmpServiсe(field, word) {
+		this.serviceTxt[15] = word;
+		field.innerHTML = this.serviceTxt.join("");
+	}
+	
+	delTmpServiсe(field) {
+		this.serviceTxt[15] = "<br>";
+		field.innerHTML = this.serviceTxt.join("");
+	}
+	
+	addServiсe(field, word) {
+		this.serviceTxt.splice(0, this.countStr(word,"<br>")+1);
+		word.split("<br>").forEach(element => {
+			this.serviceTxt.push(element+"<br>");	
+		});
+		field.innerHTML = this.serviceTxt.join("");
+	}
+	
+	countStr(str, substr) {
+		let count = -1, index = 0;
+		for (index = 0; index != -1; count++) {
+			index = str.indexOf(substr, index + 1);
+		} 
+		return count;
+	}
+
+	numTriesShow(numTries) {
+		this.rootElement.querySelector(`[data-element="tries"]`).innerHTML = "* ".repeat(numTries);
+	}	
+
 	render() {
 		this.rootElement.innerHTML = this.template();
 	}	
+
+	startTimer(timeOut) {
+		if (timeOut <= 0) {
+		  // тут, кмк, достаточно вот так сделать
+		  this.subElements.timer.innerHTML = "";
+		  return;
+		}
+		const timerFunc = () => setInterval(() => {
+			let seconds = timeOut % 60,
+				minutes = timeOut / 60 % 60,
+				hour = timeOut / 60 / 60 % 60;
+			// Условие если время закончилось то...
+			if (timeOut <= 0) {
+				// Таймер удаляется
+				clearInterval(timerFunc);
+				console.log('game lost');
+			} else { // Иначе
+				// Создаём строку с выводом времени
+				let strSec = pad(parseInt(seconds, 10).toString(), 2);
+				let strMin = pad(parseInt(Math.trunc(minutes), 10).toString(), 2);
+				let strHour = pad(parseInt(Math.trunc(hour), 10).toString(), 2);
+				let strOut = `${strHour}:${strMin}:${strSec}`;
+				// Выводим строку в блок для показа таймера
+				this.rootElement.querySelector(".timer").innerHTML = strOut;
+			}
+			--timeOut; // Уменьшаем таймер
+		}, 1000)
+		timerFunc();
+	}
 };
 
 
@@ -427,89 +527,5 @@ function startTimer(timeOut) {
 startTimer(600);
 
 
-m_field.onmouseout = function onMouseOut(event) {
-  let c_elem = event.target; 				// Текущий, current element, с которого ушла мышь
-	c_elem.style.color = fgCol;				// Перекрашиваем его в нормальный цвет по факту ухода
-	c_elem.style.background = bgCol;
-	if (l_cheat >=0 || r_cheat>= 0) {
-		for (i = l_cheat; i <= r_cheat; i++) { // Мы красили ранее чит и ушли с него! Покрасим его обратно.
-			document.getElementById(i).style.background = bgCol;
-			document.getElementById(i).style.color = fgCol;  
-		}
-		l_cheat = -1;	// Левая граница чита глобально - ушли с чита, значит вовзращаем индесы на место
-		r_cheat = -1;	// Правая граница чита глобально - ушли с чита, значит вовзращаем индесы на место
-	}
-	if (c_elem.className == "word") {
-		removeTmpServive();
-	}	
-};
-
-m_field.onclick = function onMouseClick(event) {
-	let c_elem = event.target;	// Текущий элемент, на котором кликнули current element
-	let c_id = c_elem.id;				// Его ID, для краткости
-	if (c_elem.className == 'word') { 	// Кликнули на слово
-		if (c_id == game_data.password) { // Слово свопало с паролем
-			gameWin();	// Выиграли
-			return;
-		} else {	// Слово не совпало с паролем
-			num_tries--;	// Уменьшаем число попыток
-			numTries(num_tries);	// Отображаем уменьшенный результат
-			if (num_tries == 0) { // Все попытки исчерпаны
-				gameLose();	// Проиграли
-			}	else {
-				let n_let = compareWords(c_id, game_data.password); // Сравниваем выбранное слово с паролем по буквам
-				removeTmpServive();
-				insertServive(`${c_id} <br> ${n_let} of ${game_data.len_word}<br>`);	// Выводим результат сравнения
-			}
-		}
-	} else { // Кликнули на символ
-		let i = 0;
-		let flag = 0;
-		if (l_cheat >= 0 && r_cheat >= 0) { // Кликнули на скобке и ранее обнаружен удачный чит
-			for (i = l_cheat; i <= r_cheat; i++) {
-				document.getElementById(i).innerHTML = '.';	// Превращаем каждый элемент чита в точку и прокрашиваем как было
-				document.getElementById(i).style.background = bgCol;
-				document.getElementById(i).style.color = fgCol;
-				grb_str_clear[i] = '.';
-			}	
-			
-			let chance = Math.random();
-			if (chance <= game_data.chance_tries) { // Повезло. восстанавливаем попытки!
-				num_tries = game_data.num_tries;
-				numTries(num_tries);	// Отображаем результат
-			} else { // Убираем слово-заглушку
-				let idx_dumb = getRandomInt(0, game_data.falsewords.length-1);	// Выбираем случайное слово - не пароль.
-				let word_sel = document.getElementById(game_data.falsewords[idx_dumb]);
-				if (word_sel == undefined) { // Кончились "заглушки"
-					num_tries = game_data.num_tries; // Восстанавливаем попытки
-					numTries(num_tries);	// Отображаем результат
-				} else {
-					game_data.falsewords.splice(idx_dumb, 1);	// Удаляем выбранное слово из массива.
-					let new_word = '';
-					insertServive("DUMMY REMOVED! <br>");
-					for (i = 0; i < word_sel.innerHTML.length; i++) {	// Перебираем выбранное слово посимвольно.
-						if (flag == 0 && word_sel.innerHTML[i] == '<') { // Нашли тэг <br>, выставляем флаг, что надо копировать тэг.
-							flag = 1;
-							new_word += word_sel.innerHTML[i];
-							continue;
-						}
-						if (flag == 1 && word_sel.innerHTML[i] == '>') { // Тэг закончился, скопировн, флаг обнулили.
-							new_word += word_sel.innerHTML[i];
-							flag = 0;
-							continue;
-						}	
-						if (flag == 1) { // Копируем тэг без изменений в новое "слово".
-							new_word += word_sel.innerHTML[i];
-							continue;
-						}	
-						new_word += '<span id=\"dot\" class=\"char\">.</span>'; // Все символы в слове, кроме тэга, заменяем точками.
-					}
-					word_sel.innerHTML = new_word; 	// Заменили в документе слово точками.
-					word_sel.id = ''; 							// Обнулили ID
-				}
-			}	
-		}	
-	}	
-};
 
 */
