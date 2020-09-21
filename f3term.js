@@ -1,5 +1,6 @@
 // Полезные вспомогательные функции
 
+
 function isAlpha(c) {
 	const alphas = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	return (alphas.indexOf(c) != -1);
@@ -88,7 +89,7 @@ export default class gameHackTerminal {
 		this.leftTxt = '';	// Левое поле текста
 		this.rightTxt = ''; // Правое поле текста
 
-		this.rootElement = document.querySelector(".screen__content"); // Основной элемент интерфейса
+		this.element = document.querySelector(".screen__content"); // Основной элемент интерфейса
 		
 		// Заполняем массивы
 		this.wordList = this.initWordList(this.passPos, gameData.password, this.numWords, gameData.falseWords);
@@ -105,15 +106,15 @@ export default class gameHackTerminal {
 	}
 
 	initEventListeners() {
-		this.rootElement.addEventListener("pointerover", this.onHover);
-		this.rootElement.addEventListener("pointerout", this.onOut);
-		this.rootElement.addEventListener("pointerdown", this.onClick);
+		this.element.addEventListener("pointerover", this.onHover);
+		this.element.addEventListener("pointerout", this.onOut);
+		this.element.addEventListener("pointerdown", this.onClick);
 	}
 	  
 	destroyEventListeners() {
-		this.rootElement.removeEventListener("pointerover", this.onHover);
-		this.rootElement.removeEventListener("pointerout", this.onOut);
-		this.rootElement.removeEventListener("pointerdown", this.onClick);
+		this.element.removeEventListener("pointerover", this.onHover);
+		this.element.removeEventListener("pointerout", this.onOut);
+		this.element.removeEventListener("pointerdown", this.onClick);
   	}
 
 	dummy() {
@@ -169,8 +170,8 @@ export default class gameHackTerminal {
 		}
 	}
 
-	clickOnWord(element) {
-		const curId = element.dataset.element;
+	clickOnWord(wordElement) {
+		const curId = wordElement.dataset.element;
 		const numLetters = compareWords(curId, this.password); // Сравниваем выбранное слово с паролем по буквам
 		if (numLetters == this.lenWord)  { // Слово свопало с паролем
 			this.gameWin();	// Выиграли
@@ -187,14 +188,14 @@ export default class gameHackTerminal {
 		}
 	}
 
-	clickOnChar(element) {
+	clickOnChar(charElement) {
 		let i = 0;
 		let flag = 0;
 		const chance = Math.random();
 		if (this.leftCheat >= 0 && this.rightCheat >= 0) { // Кликнули на скобке и ранее обнаружен удачный чит
 			for (i = this.leftCheat; i <= this.rightCheat; i++) {
-				element.parentNode.querySelector(`[data-element="idx-${i}"]`).innerHTML = '.';
-				element.parentNode.querySelector(`[data-element="idx-${i}"]`).classList.remove('highlight');
+				charElement.parentNode.querySelector(`[data-element="idx-${i}"]`).innerHTML = '.';
+				charElement.parentNode.querySelector(`[data-element="idx-${i}"]`).classList.remove('highlight');
 				this.grbStrClear[i] = '.';
 			}	
 			if (chance <= this.chanceTries) { 	// Повезло. восстанавливаем попытки!
@@ -213,7 +214,7 @@ export default class gameHackTerminal {
 
 	selectDummyWord() {
 		const idxDumb = getRandomInt(0, this.falseWords.length-1);	// Выбираем случайное слово - не пароль.
-		let wordSel = this.rootElement.querySelector(`[data-element="${this.falseWords[idxDumb]}"]`);
+		let wordSel = this.element.querySelector(`[data-element="${this.falseWords[idxDumb]}"]`);
 		let i = 0, flag = 0;
 		if (wordSel === undefined) { // Кончились "заглушки"
 			return undefined;
@@ -240,13 +241,13 @@ export default class gameHackTerminal {
 			}
 			wordSel.innerHTML = newWord; 	// Заменили в документе слово точками.
 			wordSel.dataset.element = ''; 	// Обнулили ID
+			return wordSel; 
 		}
 	}
 
-	checkCheat(element) {
+	checkCheat(cheatElement) {
 		let left = -1, right = -1; // Левая и правая границы чита
-		let i = 0, j = 0;
-		const curId = element.dataset.element.slice(4); // Позиция в массиве grb_str_clear
+		const curId = cheatElement.dataset.element.slice(4); // Позиция в массиве grb_str_clear
 		const leftBorder = Math.floor(curId / this.numChars) * this.numChars; // Левая граница строки 
 		const rightBorder = leftBorder + this.numChars;	// Правая граница строки
 		let leftIdx = this.leftBrackets.indexOf(this.grbStrClear[curId]); 	// Проверяем, является ли символ левой скобкой
@@ -414,7 +415,7 @@ export default class gameHackTerminal {
 				strLose += "Time is out! ";
 			}
 		}
-		this.rootElement.querySelector("[data-element=\"tries\"]").innerHTML = strLose;
+		this.element.querySelector("[data-element=\"tries\"]").innerHTML = strLose;
 	}
 	
 	gameWin () { // Выигрыш
@@ -422,7 +423,7 @@ export default class gameHackTerminal {
 		if (this.timeOut >0) {
 			clearInterval(timerFunc);	
 		}
-		this.rootElement.querySelector("[data-element=\"tries\"]").innerHTML = "You WIN! Access GRANTED!";
+		this.element.querySelector("[data-element=\"tries\"]").innerHTML = "You WIN! Access GRANTED!";
 	}
 
 	addTmpServiсe(field, word) {
@@ -452,11 +453,11 @@ export default class gameHackTerminal {
 	}
 
 	numTriesShow(numTries) {
-		this.rootElement.querySelector(`[data-element="tries"]`).innerHTML = "* ".repeat(numTries);
+		this.element.querySelector(`[data-element="tries"]`).innerHTML = "* ".repeat(numTries);
 	}	
 
 	render() {
-		this.rootElement.innerHTML = this.template();
+		this.element.innerHTML = this.template();
 	}	
 
 	startTimer(timeOut) {
@@ -481,7 +482,7 @@ export default class gameHackTerminal {
 				let strHour = pad(parseInt(Math.trunc(hour), 10).toString(), 2);
 				let strOut = `${strHour}:${strMin}:${strSec}`;
 				// Выводим строку в блок для показа таймера
-				this.rootElement.querySelector(".timer").innerHTML = strOut;
+				this.element.querySelector(".timer").innerHTML = strOut;
 			}
 			--timeOut; // Уменьшаем таймер
 		}, 1000)
