@@ -90,7 +90,7 @@ export default class gameHackTerminal {
 
 		this.header = gameData.header;
 
-		this.rootElement = document.querySelector(".screen__content"); // Основной элемент интерфейса
+		this.element = document.querySelector(".screen__content"); // Основной элемент интерфейса
 		
 		this.render();
 		
@@ -118,10 +118,10 @@ export default class gameHackTerminal {
 		`
 	}
 
-	typewriter(element, addText, delay) {
-		let text = element.innerHTML + addText;
+	typewriter(typeElement, addText, delay) {
+		let text = typeElement.innerHTML + addText;
 		let kbFlag = 0;
-		element.innerHTML = '';
+		typeElement.innerHTML = '';
 		document.addEventListener('keydown',function keyDelay(event) {
 			if((event.code === 'Enter' || 
 				event.code === 'NumpadEnter' ||
@@ -138,7 +138,7 @@ export default class gameHackTerminal {
 					tmpTxt += text[0];
 				}
 			}
-			element.innerHTML += tmpTxt;
+			typeElement.innerHTML += tmpTxt;
 			text = text.substr(1);
 			if (text.length != 0) {
 				setTimeout(typeFunc, delay);
@@ -149,8 +149,8 @@ export default class gameHackTerminal {
 	}
 
 	render() {
-		this.rootElement.innerHTML = this.template();
-		this.typewriter(this.rootElement.querySelector(".typewriter"), "tridvaras", 100);
+		this.element.innerHTML = this.template();
+		this.typewriter(this.element.querySelector(".typewriter"), "tridvaras", 100);
 	}	
 
 
