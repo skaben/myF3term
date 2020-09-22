@@ -1,11 +1,11 @@
 
 .timer	{
 	box-sizing: border-box;
-  width: 15%;
+  width: 15vw;
   float: right;
 	font-family: '7LED';
 	font-size: 24pt;
-  margin-top: -4rem;
+  margin-top: -8rem;
 	margin-right: 6rem;
 }
 	
@@ -78,6 +78,7 @@
 
 .interface {
   width: 100vw;
+  height: 100vh;
   margin-left: 2rem;
   font-size: 1.3rem;
   clear: both;
@@ -86,16 +87,25 @@
 }
 
 .interface_head {
-  margin-top: 2rem;
+  vertical-align: top;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  height: 15vh;
+  width: 100vw;
 }
 
 .interface_foot {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  vertical-align: bottom;
   height: 10vh;
+  width: 100vw;
 }
 
-.interface_field {
-  margin-top: 5rem;
-  width: 75vw;
+.interface_content {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  width: 100vw;
 	height: 60vh;
 	float: left;
 }

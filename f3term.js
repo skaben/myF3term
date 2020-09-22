@@ -61,10 +61,12 @@ export default class gameHackTerminal {
 			timeOut: 600,		// Счетчик обратного отсчёта, секунды. 0 - нет отсчёта. 
 			chanceTries: 0.2, 	// Вероятность при чите восстановить попытки
 			falseWords: ['DESCRIBE', 'LINGERIE', 'MCMILLEN', 'OPPERMAN', 'PAVEMENT', 'QUANTITY', 'REVERENT'],
-			header: ' ROBCO INDUSTRIES 2077',
-			footer: 'FALLOUT TERMINAL'
+			header: '(C) ROBCO INDUSTRIES 2077<br>RTOS V 12.0.5 DEBUG MODE',
+			footer: 'RTOS (C) ROBCO INDUSTRIES 2077 DEBUG ACCOUNT MODE'
 		}
 	} = {}) {
+		this.header = gameData.header;
+		this.footer = gameData.footer;
 		this.timeОut = gameData.timeOut;
 		this.password = gameData.password;
 		this.chanceTries = gameData.chanceTries; 
@@ -384,9 +386,9 @@ export default class gameHackTerminal {
 	template() {
 		return `
 		<div class="interface">
-			<div class="interface_header">
-			<p data-element="status">-----</p>
-			<p> TRIES LEFT: <span data-element="tries">${"* ".repeat(this.tries)}</span></p>
+			<div class="interface_head">
+			<p data-element="header"></p>
+			<p>------<br>TRIES LEFT: <span data-element="tries">${"* ".repeat(this.tries)}</span></p>
 			</div>
 			<div class="timer"></div>
 			<div class="interface_content">
@@ -395,13 +397,50 @@ export default class gameHackTerminal {
 			<div class="idx right_idx">${this.rightIdx}</div>
 			<div class="content_right">${this.rightTxt}</div>
 			<div class="content_service">
-				<div class="cursor">${"<br>".repeat(15)} > </div>
+				<div class="cursor">${"<br>".repeat(15)} &gt; </div>
 				<div class="service" data-element="log">${"<br>".repeat(16)}</div>
 			</div>
 			</div>
-		</div>
+			<div class="interface_foot"></div>			
 		`
 	}
+
+	render() {
+		this.element.innerHTML = this.template();
+		this.typewriter(this.element.querySelector(`[data-element="header"]`), this.header, 100);
+		this.typewriter(this.element.querySelector(`.interface_foot`), this.footer, 100);
+	}	
+
+	typewriter(typeElement, addText, delay) {
+		let text = typeElement.innerHTML + addText;
+		let kbFlag = 0;
+		typeElement.innerHTML = '';
+		document.addEventListener('keydown', function keyDelay(event) {
+			if((event.code === 'Enter' || 
+				event.code === 'NumpadEnter' ||
+				event.code === 'Space') && ! kbFlag) {
+				kbFlag = 1;
+				delay = delay/4;
+			}
+		})
+		setTimeout(function typeFunc() {
+			let tmpTxt = text[0];
+			if (tmpTxt === "<") {
+				while(text[0] != '>') {
+					text = text.substr(1);
+					tmpTxt += text[0];
+				}
+			}
+			typeElement.innerHTML += tmpTxt;
+			text = text.substr(1);
+			if (text.length != 0) {
+				setTimeout(typeFunc, delay);
+			} else {
+				document.removeEventListener('keydown', function keyDelay(event){});
+			}
+		}, delay)
+	}
+
 
 	gameLose () { // Проигрыш
 		this.destroyEventListeners();
@@ -454,10 +493,6 @@ export default class gameHackTerminal {
 
 	numTriesShow(numTries) {
 		this.element.querySelector(`[data-element="tries"]`).innerHTML = "* ".repeat(numTries);
-	}	
-
-	render() {
-		this.element.innerHTML = this.template();
 	}	
 
 	startTimer(timeOut) {
