@@ -69,6 +69,7 @@ export default class gameHackTerminal {
 		this.footer = gameData.footer;
 		this.timeОut = gameData.timeOut;
 		this.password = gameData.password;
+		this.endType = 0;
 		this.chanceTries = gameData.chanceTries; 
 		this.numTries = gameData.numTries; 	// Эталонное висло попыток
 		this.tries = gameData.numTries;		// Рабочее (текущее) число попыток
@@ -405,10 +406,14 @@ export default class gameHackTerminal {
 		`
 	}
 
-	render() {
+	async render() {
 		this.element.innerHTML = this.template();
-		this.typewriter(this.element.querySelector(`[data-element="header"]`), this.header, 100);
-		this.typewriter(this.element.querySelector(`.interface_foot`), this.footer, 100);
+		let endTyping = new Promise ((resolve) => 
+			this.typewriter(this.element.querySelector('data-element="header"]'), this.header, 100));
+		await endTyping;
+		endTyping = new Promise ((resolve) => 
+			this.typewriter(this.element.querySelector('.interface_foot'), this.footer, 100));
+		await endTyping;
 	}	
 
 	typewriter(typeElement, addText, delay) {
@@ -438,7 +443,7 @@ export default class gameHackTerminal {
 			} else {
 				document.removeEventListener('keydown', function keyDelay(event){});
 			}
-		}, delay)
+		}, delay);
 	}
 
 
@@ -497,7 +502,6 @@ export default class gameHackTerminal {
 
 	startTimer(timeOut) {
 		if (timeOut <= 0) {
-		  // тут, кмк, достаточно вот так сделать
 		  this.subElements.timer.innerHTML = "";
 		  return;
 		}
