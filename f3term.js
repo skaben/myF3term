@@ -409,7 +409,7 @@ export default class gameHackTerminal {
 	async render() {
 		this.element.innerHTML = this.template();
 		let endTyping = new Promise ((resolve) => 
-			this.typewriter(this.element.querySelector('data-element="header"]'), this.header, 100));
+			this.typewriter(this.element.querySelector('[data-element="header"]'), this.header, 100));
 		await endTyping;
 		endTyping = new Promise ((resolve) => 
 			this.typewriter(this.element.querySelector('.interface_foot'), this.footer, 100));
@@ -442,6 +442,7 @@ export default class gameHackTerminal {
 				setTimeout(typeFunc, delay);
 			} else {
 				document.removeEventListener('keydown', function keyDelay(event){});
+				resolve('END');
 			}
 		}, delay);
 	}
