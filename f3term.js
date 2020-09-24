@@ -59,7 +59,7 @@ export default class gameHackTerminal {
 		gameData = {	// То, что передаётся из приложения на Питоне.
 			password: 'AARDVARK',
 			numTries: 4,
-			timeOut: 600,		// Счетчик обратного отсчёта, секунды. 0 - нет отсчёта.
+			timer: 600,		// Счетчик обратного отсчёта, секунды. 0 - нет отсчёта.
 			chanceTries: 0.2, 	// Вероятность при чите восстановить попытки
 			falseWords: ['DESCRIBE', 'LINGERIE', 'MCMILLEN', 'OPPERMAN', 'PAVEMENT', 'QUANTITY', 'REVERENT'],
 			header: '(C) ROBCO INDUSTRIES 2077<br>RTOS V 12.0.5 DEBUG MODE',
@@ -68,7 +68,8 @@ export default class gameHackTerminal {
 	} = {}) {
 		this.headText = gameData.header;
 		this.footText = gameData.footer;
-		this.timeОut = gameData.timeOut;
+		this.timer = gameData.timer;
+		console.log(this.timer);
 		this.password = gameData.password;
 		this.endType = 0;
 		this.chanceTries = gameData.chanceTries;
@@ -103,8 +104,8 @@ export default class gameHackTerminal {
 
 		this.render();
 		this.initEventListeners();
-		this.setTimer(this.timeОut, 'start');
 	}
+
 
 	initEventListeners() {
 		this.element.addEventListener("pointerover", this.onHover);
@@ -159,6 +160,7 @@ export default class gameHackTerminal {
 				[this.leftCheat, this.rightCheat] = this.checkCheat(curElem);
 				if (this.leftCheat >= 0 && this.rightCheat >= 0) {
 					for (let i = this.leftCheat; i <= this.rightCheat; i++) {
+						// this.subElements[`idx-${i}`].classList.toggle('highlight');
 						this.subElements[`idx-${i}`].classList.add('highlight');
 					}
 				}
@@ -256,8 +258,8 @@ export default class gameHackTerminal {
 			let rightBrk = this.rightBrackets[leftIdx]; // Выбираем к ней правую пару
 			[left, right] = this.selectCheat(curId, rightBorder, rightBrk);
 		} else if (rightIdx >= 0) { // Это правая скобка
-				let leftBrk = this.leftBrackets[rightIdx]; // Выбираем к ней левую пару
-				[left, right] = this.selectCheat(curId, leftBorder, leftBrk);
+			let leftBrk = this.leftBrackets[rightIdx]; // Выбираем к ней левую пару
+			[left, right] = this.selectCheat(curId, leftBorder, leftBrk);
 		}
 		return [left, right];
 	}
@@ -385,10 +387,10 @@ export default class gameHackTerminal {
 		return `
 		<div class="interface">
 			<div class="interface_head" data-element="header">
-				<div class="timer" data-element="timer"></div>
 				<p>${this.headText}</p>
-				<p>------<br>TRIES LEFT: <span data-element="tries">${"* ".repeat(this.tries)}</span></p>
 			</div>
+			<div data-element="tries">-------------<br>TRIES LEFT: <span data-element="numTries">${"* ".repeat(this.tries)}</span><br></div>
+			<div class="timer" data-element="timer"></div>
 			<div class="interface_content" data-element="body">
 				<div class="idx left_idx">${this.leftIdx}</div>
 				<div class="content_left">${this.leftTxt}</div>
@@ -411,18 +413,30 @@ export default class gameHackTerminal {
 		element.innerHTML = this.template;
 		this.element = element.firstElementChild;
 		this.subElements = this.getSubElementsByData(this.element);
+		
+		console.log(this.subElements.body);
+
 		let tmpHead = this.subElements.header.innerHTML
 		this.subElements.header.innerHTML = '';
-		let tmpBody = this.subElements.body.innerHTML
-		this.subElements.body.innerHTML = '';
 		let tmpFooter = this.subElements.footer.innerHTML
 		this.subElements.footer.innerHTML = '';
 
+		this.subElements.body.classList.add('hide');
+		this.subElements.timer.classList.add('hide');
+		this.subElements.tries.classList.add('hide');
+
 		const headerType = () => this.typewriter(this.subElements.header, tmpHead, 100, footerType);
 		const footerType = () => this.typewriter(this.subElements.footer, tmpFooter, 100, bodyType);
-		const bodyType = () => this.subElements.body.innerHTML = tmpBody;
+		const bodyType = () => {
+			this.subElements.body.classList.remove('hide');
+			this.setTimer(this.timer, 'start');
+			this.subElements.timer.classList.remove('hide');
+			this.subElements.tries.classList.remove('hide');
+			
+		}
 		headerType();
-   	return this.element;
+		
+		return this.element;
 	}
 
 	typewriter(typeElement, addText, delay, callback) {
@@ -508,13 +522,13 @@ export default class gameHackTerminal {
 	}
 
 	numTriesShow(numTries) {
-		this.subElements.tries.innerHTML = "* ".repeat(numTries);
+		this.subElements.numTries.innerHTML = "* ".repeat(numTries);
 	}
 
-	setTimer(timeOut, attr) {
-		if (timeOut <= 0) {
+	setTimer(time, attr) {
+		if (time <= 0) {
 			this.subElements.timer.innerHTML = "";
-		  	return;
+		 	return;
 		}
 		if (attr === 'stop') {
 			clearInterval(timerFunc);
@@ -522,25 +536,26 @@ export default class gameHackTerminal {
 			return;
 		} else {
 			const timerFunc = () => setInterval(() => {
-				let seconds = timeOut % 60,
-					minutes = timeOut / 60 % 60,
-					hour = timeOut / 60 / 60 % 60;
-				// Условие если время закончилось то...
-				if (timeOut <= 0) {
+				let seconds = time % 60,
+						minutes = time / 60 % 60,
+						hour = time / 60 / 60 % 60;
+				if (time <= 0) {
 					// Таймер удаляется
 					clearInterval(timerFunc);
 					this.gameLose();
+					return;
 				} else { // Иначе
 					// Создаём строку с выводом времени
 					let strSec = pad(parseInt(seconds, 10).toString(), 2);
 					let strMin = pad(parseInt(Math.trunc(minutes), 10).toString(), 2);
 					let strHour = pad(parseInt(Math.trunc(hour), 10).toString(), 2);
 					let strOut = `${strHour}:${strMin}:${strSec}`;
+					console.log(time);
 					// Выводим строку в блок для показа таймера
 					this.subElements.timer.innerHTML = strOut;
 				}
-				--timeOut; // Уменьшаем таймер
-			}, 1000)
+				--time; // Уменьшаем таймер
+			}, 1000);
 			timerFunc();
 		}
   }
