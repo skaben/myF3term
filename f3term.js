@@ -66,8 +66,8 @@ export default class gameHackTerminal {
 			footer: 'RTOS (C) ROBCO INDUSTRIES 2077 DEBUG ACCOUNT MODE'
 		}
 	} = {}) {
-		this.header = gameData.header;
-		this.footer = gameData.footer;
+		this.headText = gameData.header;
+		this.footText = gameData.footer;
 		this.timeОut = gameData.timeOut;
 		this.password = gameData.password;
 		this.endType = 0;
@@ -383,43 +383,62 @@ export default class gameHackTerminal {
 	get template() {
 		return `
 		<div class="interface">
-			<div class="interface_head">
-				<p data-element="header"></p>
-				<p>------<br>TRIES LEFT: <span data-element="tries">${"* ".repeat(this.tries)}</span></p>
+			<div class="interface_head" data-element="header">
 				<div class="timer" data-element="timer"></div>
 			</div>
-			<div class="interface_content">
-				<div class="idx left_idx">${this.leftIdx}</div>
-				<div class="content_left">${this.leftTxt}</div>
-				<div class="idx right_idx">${this.rightIdx}</div>
-       			<div class="content_right">${this.rightTxt}</div>
+			<div class="interface_content" data-element="body">
+				<div class="content_service">
+					<div class="cursor">${"<br>".repeat(15)} &gt; </div>
+					<div class="service" data-element="log">${"<br>".repeat(16)}</div>
+				</div>
 			</div>
-			<div class="content_service">
-				<div class="cursor">${"<br>".repeat(15)} &gt; </div>
-				<div class="service" data-element="log">${"<br>".repeat(16)}</div>
-			</div>
-			<div class="interface_foot" data-element="footer"></div>
+			<div class="interface_foot" data-element="footer"></div>			
 		</div>
 		`
 	}
+	
+	get headerTemplate() {
+		return `
+			<p>${this.headText}</p>
+			<p>------<br>TRIES LEFT: <span data-element="tries">${"* ".repeat(this.tries)}</span></p>
+		`
+	}
+
+	get bodyTemplate() {
+		return `
+		<div class="idx left_idx">${this.leftIdx}</div>
+		<div class="content_left">${this.leftTxt}</div>
+		<div class="idx right_idx">${this.rightIdx}</div>
+		<div class="content_right">${this.rightTxt}</div>
+	`
+	}
+
+	get footerTemplate() {
+		return `
+			<p>${this.footText}</p>
+		`
+	}
+
 
 	async render() {
-    	const element = document.createElement('div');
-    	element.innerHTML = this.template;
-    	this.element = element.firstElementChild;
-    	this.subElements = this.getSubElementsByData(this.element);
-    	const footerType = () => this.typewriter(this.subElements['footer'], this.footer, 100);
-    	const headerType = () => this.typewriter(this.subElements['header'], this.header, 100, footerType);
-
-    	headerType();
-
-    	return this.element;
+    const element = document.createElement('div');
+		element.innerHTML = this.template;
+		this.header = this.headerTemplate;
+		this.body = this.bodyTemplate;
+		this.footer = this.footerTemplate;
+		this.element = element.firstElementChild;
+		this.subElements = this.getSubElementsByData(this.element);
+		const headerType = () => this.typewriter(this.subElements['header'], this.header, 100, footerType);
+		const footerType = () => this.subElements.body.innerHTML = this.body;
+		headerType();
+		this.subElements = this.getSubElementsByData(this.element);
+   	return this.element;
 	}
 
 	typewriter(typeElement, addText, delay, callback) {
 		let text = typeElement.innerHTML + addText;
 		let kbFlag = 0;
-    	typeElement.innerHTML = '';
+    typeElement.innerHTML = '';
 		document.addEventListener('keydown', function keyDelay(event) {
 			if((event.code === 'Enter' ||
 				event.code === 'NumpadEnter' ||
@@ -427,7 +446,7 @@ export default class gameHackTerminal {
 				kbFlag = 1;
 				delay = delay/4;
 			}
-    	});
+    });
 		setTimeout(function typeFunc() {
 			let tmpTxt = text[0];
 			if (tmpTxt === "<") {
@@ -534,7 +553,7 @@ export default class gameHackTerminal {
 			}, 1000)
 			timerFunc();
 		}
-  	}
+  }
 
 	getSubElementsByData(element) {
 		const elements = element.querySelectorAll('[data-element]');
