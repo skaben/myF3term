@@ -5,10 +5,14 @@
   float: right;
 	font-family: '7LED';
 	font-size: 24pt;
-  margin-top: -8rem;
-	margin-right: 6rem;
+  margin-top: -6rem;
+	margin-right: 5rem;
 }
-	
+
+.hide {
+  visibility: hidden;
+}
+
 .content {
   box-sizing: border-box;
   width: 25%;
@@ -90,7 +94,7 @@
   vertical-align: top;
   margin-top: 1rem;
   margin-bottom: 2rem;
-  height: 15vh;
+  height: 3vh;
   width: 100vw;
 }
 
