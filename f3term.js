@@ -69,7 +69,6 @@ export default class gameHackTerminal {
 		this.headText = gameData.header;
 		this.footText = gameData.footer;
 		this.timer = gameData.timer;
-		console.log(this.timer);
 		this.password = gameData.password;
 		this.endType = 0;
 		this.chanceTries = gameData.chanceTries;
@@ -104,19 +103,60 @@ export default class gameHackTerminal {
 
 		this.render();
 		this.initEventListeners();
-	}
 
+		this.subElements.timer.addEventListener("timeCntrl", function(event) {
+			let time = event.detail.time;
+			let attr = event.detail.cntrl;
+			let gameLose = event.detail.gameOver;
+			const field = event.target;
+			if (time <= 0) {
+				field.innerHTML = "";
+			}
+			if (attr === 'stop') {
+				clearInterval(timerFunc);
+				field.innerHTML = "";
+			} else {
+				let timerFunc = setInterval(function () {
+					let seconds = time % 60,
+							minutes = time / 60 % 60,
+							hour = time / 60 / 60 % 60;
+					if (time <= 0) {
+						clearInterval(timerFunc);
+						field.innerHTML = "";
+						field.dispatchEvent(new CustomEvent("gameOver", {
+							detail: { result: "Lose", str: "Time is over!"}   
+						}));
+					} else { 
+						let strSec = pad(parseInt(seconds, 10).toString(), 2);
+						let strMin = pad(parseInt(Math.trunc(minutes), 10).toString(), 2);
+						let strHour = pad(parseInt(Math.trunc(hour), 10).toString(), 2);
+						let strOut = `${strHour}:${strMin}:${strSec}`;
+						field.innerHTML = strOut;
+					}
+					--time;
+				}, 1000);
+			}
+		});
+
+
+		this.subElements.timer.dispatchEvent(new CustomEvent("timeCntrl", {
+			detail: { time: 10, cntrl: "start", gameOver: this.gameLose, elems: this.elements }   
+		}));
+
+	}
 
 	initEventListeners() {
 		this.element.addEventListener("pointerover", this.onHover);
 		this.element.addEventListener("pointerout", this.onOut);
 		this.element.addEventListener("pointerdown", this.onClick);
+		this.subElements.timer.addEventListener("gameOver", this.gameOver);
 	}
 
 	destroyEventListeners() {
 		this.element.removeEventListener("pointerover", this.onHover);
 		this.element.removeEventListener("pointerout", this.onOut);
 		this.element.removeEventListener("pointerdown", this.onClick);
+		this.subElements.timer.removeEventListener("gameOver", this.gameOver);
   	}
 
 	dummy() {
@@ -414,8 +454,6 @@ export default class gameHackTerminal {
 		this.element = element.firstElementChild;
 		this.subElements = this.getSubElementsByData(this.element);
 		
-		console.log(this.subElements.body);
-
 		let tmpHead = this.subElements.header.innerHTML
 		this.subElements.header.innerHTML = '';
 		let tmpFooter = this.subElements.footer.innerHTML
@@ -429,10 +467,8 @@ export default class gameHackTerminal {
 		const footerType = () => this.typewriter(this.subElements.footer, tmpFooter, 100, bodyType);
 		const bodyType = () => {
 			this.subElements.body.classList.remove('hide');
-			this.setTimer(this.timer, 'start');
 			this.subElements.timer.classList.remove('hide');
 			this.subElements.tries.classList.remove('hide');
-			
 		}
 		headerType();
 		
@@ -470,29 +506,12 @@ export default class gameHackTerminal {
 		}, delay);
 	}
 
-	gameLose () { // Проигрыш
-		this.destroyEventListeners();
-		let  strLose = "You LOSE! ";
-		if (this.tries <=0) {
-			strLose += "Tries is over! ";
-		}
-		if (this.timeOut >0) {
-			clearInterval(timerFunc);
-			this.setTimer(this.timeОut, 'stop');
-			if (this.timeOut <= 0) {
-				strLose += "Time is out! ";
-			}
-		}
-		this.subElements.tries.innerHTML = strLose;
-	}
-
-	gameWin () { // Выигрыш
-		this.destroyEventListeners();
-		if (this.timeOut > 0) {
-			clearInterval(timerFunc);
-			this.setTimer(this.timeОut, 'stop');
-		}
-		this.subElements.tries.innerHTML = "You WIN! Access GRANTED!";
+	gameOver(event) { 
+		let result = event.detail.result; // Сделать вызов севрерной компоненты
+		let str = event.detail.string;
+		let elem = event.target;
+		this.subElements.tries.innerHTML = str;
+		elem.destroyEventListeners();
 	}
 
 	addTmpServiсe(field, word) {
@@ -524,41 +543,6 @@ export default class gameHackTerminal {
 	numTriesShow(numTries) {
 		this.subElements.numTries.innerHTML = "* ".repeat(numTries);
 	}
-
-	setTimer(time, attr) {
-		if (time <= 0) {
-			this.subElements.timer.innerHTML = "";
-		 	return;
-		}
-		if (attr === 'stop') {
-			clearInterval(timerFunc);
-			this.subElements.timer.innerHTML = "";
-			return;
-		} else {
-			const timerFunc = () => setInterval(() => {
-				let seconds = time % 60,
-						minutes = time / 60 % 60,
-						hour = time / 60 / 60 % 60;
-				if (time <= 0) {
-					// Таймер удаляется
-					clearInterval(timerFunc);
-					this.gameLose();
-					return;
-				} else { // Иначе
-					// Создаём строку с выводом времени
-					let strSec = pad(parseInt(seconds, 10).toString(), 2);
-					let strMin = pad(parseInt(Math.trunc(minutes), 10).toString(), 2);
-					let strHour = pad(parseInt(Math.trunc(hour), 10).toString(), 2);
-					let strOut = `${strHour}:${strMin}:${strSec}`;
-					console.log(time);
-					// Выводим строку в блок для показа таймера
-					this.subElements.timer.innerHTML = strOut;
-				}
-				--time; // Уменьшаем таймер
-			}, 1000);
-			timerFunc();
-		}
-  }
 
 	getSubElementsByData(element) {
 		const elements = element.querySelectorAll('[data-element]');
