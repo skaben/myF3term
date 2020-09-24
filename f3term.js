@@ -87,6 +87,7 @@ export default class gameHackTerminal {
 		this.grbStrTagged = [];	// "Мусорная" строка с тэгами
 		this.grbStrClear = [];	// "Мусорная" строка в чистом виде посимвольно
 		this.posWords = [];		// Позиции слов внутри мусорной строки
+		this.subElements = [];
 		this.numGarbage = this.numRows * this.numChars *2; // Размер мусорной строки
 		this.leftIdx = '';	// Левое поле индекса (адреса)
 		this.rightIdx = '';	// Правое поле индекса (адреса)
@@ -385,53 +386,42 @@ export default class gameHackTerminal {
 		<div class="interface">
 			<div class="interface_head" data-element="header">
 				<div class="timer" data-element="timer"></div>
+				<p>${this.headText}</p>
+				<p>------<br>TRIES LEFT: <span data-element="tries">${"* ".repeat(this.tries)}</span></p>
 			</div>
 			<div class="interface_content" data-element="body">
+				<div class="idx left_idx">${this.leftIdx}</div>
+				<div class="content_left">${this.leftTxt}</div>
+				<div class="idx right_idx">${this.rightIdx}</div>
+				<div class="content_right">${this.rightTxt}</div>
 				<div class="content_service">
 					<div class="cursor">${"<br>".repeat(15)} &gt; </div>
 					<div class="service" data-element="log">${"<br>".repeat(16)}</div>
 				</div>
 			</div>
-			<div class="interface_foot" data-element="footer"></div>			
+			<div class="interface_foot" data-element="footer">
+				<p>${this.footText}</p>
+			</div>			
 		</div>
 		`
 	}
 	
-	get headerTemplate() {
-		return `
-			<p>${this.headText}</p>
-			<p>------<br>TRIES LEFT: <span data-element="tries">${"* ".repeat(this.tries)}</span></p>
-		`
-	}
-
-	get bodyTemplate() {
-		return `
-		<div class="idx left_idx">${this.leftIdx}</div>
-		<div class="content_left">${this.leftTxt}</div>
-		<div class="idx right_idx">${this.rightIdx}</div>
-		<div class="content_right">${this.rightTxt}</div>
-	`
-	}
-
-	get footerTemplate() {
-		return `
-			<p>${this.footText}</p>
-		`
-	}
-
-
 	async render() {
     const element = document.createElement('div');
 		element.innerHTML = this.template;
-		this.header = this.headerTemplate;
-		this.body = this.bodyTemplate;
-		this.footer = this.footerTemplate;
 		this.element = element.firstElementChild;
 		this.subElements = this.getSubElementsByData(this.element);
-		const headerType = () => this.typewriter(this.subElements['header'], this.header, 100, footerType);
-		const footerType = () => this.subElements.body.innerHTML = this.body;
+		let tmpHead = this.subElements.header.innerHTML
+		this.subElements.header.innerHTML = '';
+		let tmpBody = this.subElements.body.innerHTML
+		this.subElements.body.innerHTML = '';
+		let tmpFooter = this.subElements.footer.innerHTML
+		this.subElements.footer.innerHTML = '';
+
+		const headerType = () => this.typewriter(this.subElements.header, tmpHead, 100, footerType);
+		const footerType = () => this.typewriter(this.subElements.footer, tmpFooter, 100, bodyType);
+		const bodyType = () => this.subElements.body.innerHTML = tmpBody;
 		headerType();
-		this.subElements = this.getSubElementsByData(this.element);
    	return this.element;
 	}
 
@@ -557,11 +547,11 @@ export default class gameHackTerminal {
 
 	getSubElementsByData(element) {
 		const elements = element.querySelectorAll('[data-element]');
-		let elementsByData = [];
+		let subElems = [];
 		elements.forEach( function(item) {
-			elementsByData[item.getAttribute('data-element')] = item;
+			subElems[item.dataset.element] = item;
 		});
-		return elementsByData;
+		return subElems;
 	}
 
 	show(target) {
