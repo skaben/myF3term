@@ -351,7 +351,7 @@ export default class gameHackTerminal {
 	}
 
 	initGrbTagged(grbChars, wordList) {
-		let i = 0, j = 0, wordFlag = 0, charFlag = 0, tLast = '';
+		let i = 0, j = 0, wordFlag = 0, charFlag = 0;
 		let grbTagged = [];
 		grbChars.forEach(character => {
 			charFlag = isAlpha(character);
@@ -480,10 +480,10 @@ export default class gameHackTerminal {
 					}));
 					timerField.remove();
 				} else { 
-					let strSec = pad(parseInt(seconds, 10).toString(), 2);
-					let strMin = pad(parseInt(Math.trunc(minutes), 10).toString(), 2);
-					let strHour = pad(parseInt(Math.trunc(hour), 10).toString(), 2);
-					let strOut = `${strHour}:${strMin}:${strSec}`;
+					const strSec = pad(parseInt(seconds, 10).toString(), 2);
+					const strMin = pad(parseInt(Math.trunc(minutes), 10).toString(), 2);
+					const strHour = pad(parseInt(Math.trunc(hour), 10).toString(), 2);
+					const strOut = `${strHour}:${strMin}:${strSec}`;
 					timerField.innerHTML = strOut;
 				}
 				--time;
