@@ -170,20 +170,35 @@ export default class gameHackTerminal {
 		const numLetters = compareWords(curId, this.password); // Сравниваем выбранное слово с паролем по буквам
 		if (numLetters == this.lenWord)  { // Слово свопало с паролем
 			this.element.dispatchEvent(new CustomEvent("timeCntrl", {
-				detail: { bubbles: true, time: this.timer, cntrl: "stop", gameOver: this.gameOver, elems: this.elements }   
+				detail: { bubbles: true, 
+									time: this.timer, 
+									cntrl: "stop", 
+									gameOver: this.gameOver
+								}   
 			}));
 			this.element.dispatchEvent(new CustomEvent("gameOver", {
-				detail: { bubbles: true, result: "Win", string: "ACCESS GRANTED"}   
+				detail: { bubbles: true, 
+									result: "Win", 
+									string: "ACCESS GRANTED"
+								}   
 			}));
 		} else { // Слово не совпало с паролем
 			this.tries--;	// Уменьшаем число попыток
 			this.numTriesShow(this.tries);	// Отображаем уменьшенный результат
 			if (this.tries == 0) { // Все попытки исчерпаны
 				this.element.dispatchEvent(new CustomEvent("timeCntrl", {
-					detail: { bubbles: true, time: this.timer, cntrl: "stop", gameOver: this.gameOver, elems: this.elements }   
+					detail: { bubbles: true, 
+										time: this.timer, 
+										cntrl: "stop", 
+										gameOver: this.gameOver, 
+										elems: this.elements 
+									}   
 				}));
 				this.element.dispatchEvent(new CustomEvent("gameOver", {
-					detail: { bubbles: true, result: "Lose", string: "Tries is over!"}   
+					detail: { bubbles: true, 
+										result: "Lose", 
+										string: "Tries is over!"
+									}   
 				}));
 			}
 			this.delTmpServiсe(this.subElements.log);
