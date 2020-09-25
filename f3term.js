@@ -170,20 +170,20 @@ export default class gameHackTerminal {
 		const numLetters = compareWords(curId, this.password); // Сравниваем выбранное слово с паролем по буквам
 		if (numLetters == this.lenWord)  { // Слово свопало с паролем
 			this.element.dispatchEvent(new CustomEvent("timeCntrl", {
-				detail: { time: this.timer, cntrl: "stop", gameOver: this.gameOver, elems: this.elements }   
+				detail: { bubbles: true, time: this.timer, cntrl: "stop", gameOver: this.gameOver, elems: this.elements }   
 			}));
 			this.element.dispatchEvent(new CustomEvent("gameOver", {
-				detail: { result: "Win", string: "ACCESS GRANTED"}   
+				detail: { bubbles: true, result: "Win", string: "ACCESS GRANTED"}   
 			}));
 		} else { // Слово не совпало с паролем
 			this.tries--;	// Уменьшаем число попыток
 			this.numTriesShow(this.tries);	// Отображаем уменьшенный результат
 			if (this.tries == 0) { // Все попытки исчерпаны
 				this.element.dispatchEvent(new CustomEvent("timeCntrl", {
-					detail: { time: this.timer, cntrl: "stop", gameOver: this.gameOver, elems: this.elements }   
+					detail: { bubbles: true, time: this.timer, cntrl: "stop", gameOver: this.gameOver, elems: this.elements }   
 				}));
 				this.element.dispatchEvent(new CustomEvent("gameOver", {
-					detail: { result: "Lose", string: "Tries is over!"}   
+					detail: { bubbles: true, result: "Lose", string: "Tries is over!"}   
 				}));
 			}
 			this.delTmpServiсe(this.subElements.log);
@@ -430,49 +430,50 @@ export default class gameHackTerminal {
 			this.subElements.body.classList.remove('hide');
 			this.subElements.timer.classList.remove('hide');
 			this.subElements.tries.classList.remove('hide');
-			this.element.addEventListener("timeCntrl", function(event) {
-				let time = event.detail.time;
-				const attr = event.detail.cntrl;
-				const field = event.target;
-				const timerField = field.querySelector('[data-element=\"timer\"]');
-				if (time <= 0) {
-					field.innerHTML = "";
-				} else {
-					let timerFunc = setInterval(function () {
-						let seconds = time % 60,
-								minutes = time / 60 % 60,
-								hour = time / 60 / 60 % 60;
-						if (attr === 'stop') {
-							clearInterval(timerFunc);
-							timerField.innerHTML = "";
-							timerField.remove();
-						}
-						if (time <= 0) {
-							clearInterval(timerFunc);
-							timerField.innerHTML = "";
-							field.dispatchEvent(new CustomEvent("gameOver", {
-								detail: { result: "Lose", string: "Time is over!"}   
-							}));
-							timerField.remove();
-						} else { 
-							let strSec = pad(parseInt(seconds, 10).toString(), 2);
-							let strMin = pad(parseInt(Math.trunc(minutes), 10).toString(), 2);
-							let strHour = pad(parseInt(Math.trunc(hour), 10).toString(), 2);
-							let strOut = `${strHour}:${strMin}:${strSec}`;
-							timerField.innerHTML = strOut;
-						}
-						--time;
-					}, 1000);
-				}
-			});
-
+			this.element.addEventListener("timeCntrl", this.timerUse);
 			this.element.dispatchEvent(new CustomEvent("timeCntrl", {
-				detail: { time: this.timer, cntrl: "start" }   
+				detail: { bubbles: true, time: this.timer, cntrl: "start" }   
 			}));
+
 		}
 		headerType();
-		
 		return this.element;
+	}
+
+	timerUse = (event) => { 
+		let time = event.detail.time;
+		const attr = event.detail.cntrl;
+		const field = event.target;
+		const timerField = this.subElements.timer;
+		if (time <= 0) {
+			field.innerHTML = "";
+		} else {
+			let timerFunc = setInterval(function () {
+				let seconds = time % 60,
+					minutes = time / 60 % 60,
+					hour = time / 60 / 60 % 60;
+				if (attr === 'stop') {
+					clearInterval(timerFunc);
+					timerField.innerHTML = "";
+					timerField.remove();
+				}
+				if (time <= 0) {
+					clearInterval(timerFunc);
+					timerField.innerHTML = "";
+					field.dispatchEvent(new CustomEvent("gameOver", {
+						detail: { bubbles: true, result: "Lose", string: "Time is over!"}   
+					}));
+					timerField.remove();
+				} else { 
+					let strSec = pad(parseInt(seconds, 10).toString(), 2);
+					let strMin = pad(parseInt(Math.trunc(minutes), 10).toString(), 2);
+					let strHour = pad(parseInt(Math.trunc(hour), 10).toString(), 2);
+					let strOut = `${strHour}:${strMin}:${strSec}`;
+					timerField.innerHTML = strOut;
+				}
+				--time;
+			}, 1000);
+		}
 	}
 
 	typewriter(typeElement, addText, delay, callback) {
@@ -486,7 +487,7 @@ export default class gameHackTerminal {
 				kbFlag = 1;
 				delay = delay/4;
 			}
-    });
+		});
 		setTimeout(function typeFunc() {
 			let tmpTxt = text[0];
 			if (tmpTxt === "<") {
@@ -506,14 +507,10 @@ export default class gameHackTerminal {
 		}, delay);
 	}
 
-	gameOver(event) { 
+	gameOver = (event) => { 
 		const result = event.detail.result; // Сделать вызов серверной компоненты
-		const str = event.detail.string;
-		const elem = event.target;
-		const elemTries = elem.querySelector('[data-element=\"tries\"]');
-		const ifaceContent = elem.querySelector('[data-element=\"body\"]');
-		ifaceContent.classList.add('hide');
-		elemTries.innerHTML = str;
+		this.subElements.tries.innerHTML = event.detail.string;
+		this.subElements.body.classList.add('hide');
 	}
 
 	addTmpServiсe(field, word) {
